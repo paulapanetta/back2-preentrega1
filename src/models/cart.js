@@ -15,9 +15,14 @@ const productSchema = new Schema({
 }, { _id: false }); 
 
 const cartSchema = new Schema({
-    products: [productSchema],
+    user: { 
+        type: Schema.Types.ObjectId,
+        ref: 'User', 
+        required: true
+    },
+    products: [productSchema], 
 }, {
-    timestamps: true
+    timestamps: true 
 });
 
 const Cart = model('Cart', cartSchema);

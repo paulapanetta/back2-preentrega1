@@ -1,31 +1,28 @@
 import passport from 'passport';
-import LocalStrategy from 'passport-local';
-import User from './models/user.js'; 
-import bcrypt from 'bcrypt';
+import { Strategy as LocalStrategy } from 'passport-local';
+import User from '../models/user.js'; 
 
-passport.use(new LocalStrategy(
-    { usernameField: 'email' }, 
-    async (email, password, done) => {
-        try {
-            const user = await User.findOne({ email });
-            if (!user) {
-                return done(null, false, { message: 'Incorrect email.' });
-            }
-
-            const match = await bcrypt.compare(password, user.password);
-            if (!match) {
-                return done(null, false, { message: 'Incorrect password.' });
-            }
-
-            return done(null, user);
-        } catch (error) {
-            return done(error);
+passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+}, async (email, password, done) => {
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return done(null, false, { message: 'El usuario no existe' });
         }
+        const isMatch = await user.comparePassword(password); 
+        if (!isMatch) {
+            return done(null, false, { message: 'Contraseña incorrecta' });
+        }
+        return done(null, user);
+    } catch (error) {
+        return done(error);
     }
-));
+}));
 
 passport.serializeUser((user, done) => {
-    done(null, user.id);
+    done(null, user._id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -36,3 +33,5 @@ passport.deserializeUser(async (id, done) => {
         done(error);
     }
 });
+
+export default passport;

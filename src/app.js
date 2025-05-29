@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import flash from 'connect-flash';
 import { engine } from 'express-handlebars';
+import User from './models/user.js'; 
+import Cart from './models/cart.js'; 
 
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -22,23 +24,28 @@ const app = express();
 
 app.engine('handlebars', engine({
     extname: '.handlebars',
-    defaultLayout: 'main', 
+    defaultLayout: 'main',
+    runtimeOptions: {
+        allowProtoPropertiesByDefault: true,
+        allowProtoMethodsByDefault: true,
+    }
 }));
 app.set('view engine', 'handlebars');
 app.set('views', './src/views');  
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' ? true : false } // Ajusta según tu entorno
+    cookie: { secure: process.env.NODE_ENV === 'production' ? true : false } 
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.use(flash());
 
@@ -47,8 +54,14 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/', (req, res) => {
-    res.render('home', { user: req.user });
+
+app.get('/', async (req, res) => {
+    let cart = null;
+    if (req.user) {
+        
+        cart = await Cart.findOne({ user: req.user._id }).populate('products.product');
+    }
+    res.render('home', { user: req.user, cart }); 
 });
 
 app.get('/register', (req, res) => {
@@ -73,7 +86,7 @@ app.post('/register', async (req, res) => {
             first_name,
             last_name,
             email,
-            password
+            password 
         });
 
         await newUser.save();
@@ -93,21 +106,21 @@ app.post('/login', passport.authenticate('local', {
 }));
 
 app.use('/api/users', userRoutes);
-
 app.use('/api/products', isAdmin, productRoutes);
-
-app.use('/api/carts', isUser, cartRoutes);
-
+app.use('/api/carts', cartRoutes);
 app.use('/api/sessions', sessionRoutes);
 
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Conectado a MongoDB'))
-.catch(err => console.error('Error al conectar a MongoDB', err));
+const connectToDB = async () => {
+    try {
+        await mongoose.connect(MONGO_URI,);
+        console.log('Conectado a MongoDB');
+    } catch (err) {
+        console.error('Error al conectar a MongoDB', err);
+    }
+};
 
-app.listen(PORT, () => {
-    console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+connectToDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+    });
 });
-

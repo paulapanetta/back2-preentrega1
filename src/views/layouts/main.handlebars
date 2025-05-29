@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Título de la Aplicación</title>
-    <link rel="stylesheet" href="/styles.css"> 
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <header>
@@ -13,13 +13,33 @@
                 <li><a href="/">Inicio</a></li>
                 <li><a href="/register">Registrarse</a></li>
                 <li><a href="/login">Iniciar Sesión</a></li>
-                <li><a href="/cart/{{user._id}}">Carrito</a></li> 
+                {{#if user}} 
+                    <li><a href="/logout">Cerrar Sesión</a></li> 
+                    <li>
+                        {{#if user.cart}} 
+                            <a href="/cart/{{user.cart}}">Carrito</a> 
+                        {{else}}
+                            <span>Carrito vacío</span> 
+                        {{/if}}
+                    </li>
+                {{/if}}
             </ul>
         </nav>
     </header>
 
     <main>
-        {{{body}}}
+        {{{body}}} 
+        
+        {{#if messages.success}} 
+            <div class="alert alert-success">
+                {{messages.success}}
+            </div>
+        {{/if}}
+        {{#if messages.error}} 
+            <div class="alert alert-danger">
+                {{messages.error}}
+            </div>
+        {{/if}}
     </main>
 
     <footer>

@@ -1,4 +1,4 @@
-import User from '../models/User';
+import User from '../models/user.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -10,6 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export const registerUser = async (req, res) => {
     try {
         const { first_name, last_name, email, password, age } = req.body;
+        
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ status: 'error', message: 'User already exists' });
